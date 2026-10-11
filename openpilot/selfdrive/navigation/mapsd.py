@@ -52,8 +52,10 @@ def main():
             prefetched = True
           if source is not None:
             gps = sm[source]
-            # As in training, the map is centered on the route and headed along it, not at the GPS fix.
-            longitude, latitude, bearing = tracker.snap(gps.longitude, gps.latitude)
+            # As in training, the map is centered on the route and headed along it, not at the GPS fix,
+            # moved ahead by the distance driven since the fix.
+            ahead = max(gps.speed, 0.) * (now - sm.recv_time[source])
+            longitude, latitude, bearing = tracker.pose(tracker.project(gps.longitude, gps.latitude) + ahead)
             result = renderer.render(Position(latitude, longitude, bearing), route)
             if result.valid:
               image, timestamp = result.image, sm.logMonoTime[source]

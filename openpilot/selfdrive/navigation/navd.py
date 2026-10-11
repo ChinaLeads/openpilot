@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 
+import numpy as np
 import requests
 
 import openpilot.cereal.messaging as messaging
@@ -8,6 +9,7 @@ from openpilot.common.api import API_HOST, Api
 from openpilot.common.realtime import Ratekeeper
 from openpilot.selfdrive.navigation.helpers import (Coordinate, coordinate_from_param, distance_along_geometry,
                                                     latest_gps_source, minimum_distance, parse_banner_instructions)
+from openpilot.selfdrive.navigation.route import RouteTracker
 from openpilot.common.swaglog import cloudlog
 
 REROUTE_DISTANCE = 25
@@ -35,6 +37,8 @@ class RouteEngine:
     self.step_idx = None
     self.route = None
     self.route_geometry = None
+    self.route_tracker = None
+    self.maneuver_distances = None
 
     self.recompute_backoff = 0
     self.recompute_countdown = 0
@@ -139,6 +143,9 @@ class RouteEngine:
         for step in self.route:
           self.route_geometry.append([Coordinate.from_mapbox_tuple(c) for c in step['geometry']['coordinates']])
 
+        # Each step begins with its maneuver; measure them along the route the way training does
+        self.route_tracker = RouteTracker(np.array([(c.longitude, c.latitude) for path in self.route_geometry for c in path]))
+        self.maneuver_distances = self.route_tracker.distance[np.cumsum([0] + [len(path) for path in self.route_geometry[:-1]])]
         self.step_idx = 0
       else:
         cloudlog.warning("Got empty route response")
@@ -187,6 +194,12 @@ class RouteEngine:
     msg.navInstruction.distanceRemaining = total_distance
     msg.navInstruction.timeRemaining = total_time
 
+    # Maneuvers not yet passed, for the model's navigation input
+    progress = self.route_tracker.project(self.last_position.longitude, self.last_position.latitude)
+    msg.navInstruction.allManeuvers = [
+      {'distance': float(distance - progress), 'type': step['maneuver']['type'], 'modifier': step['maneuver'].get('modifier', '')}
+      for step, distance in zip(self.route, self.maneuver_distances, strict=True) if distance >= progress]
+
     self.pm.send('navInstruction', msg)
 
     # Transition to next route segment
@@ -217,6 +230,8 @@ class RouteEngine:
   def clear_route(self):
     self.route = None
     self.route_geometry = None
+    self.route_tracker = None
+    self.maneuver_distances = None
     self.step_idx = None
     self.nav_destination = None
 
