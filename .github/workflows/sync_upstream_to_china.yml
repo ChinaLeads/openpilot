@@ -163,18 +163,12 @@ jobs:
             echo "✗ 指纹配置丢失！"; FAIL=1
           fi
 
-          # 2. 禁用驾驶员摄像头
-          if grep -q 'DISABLE_DRIVER=1' launch_env.sh; then
-            echo "✓ 驾驶员摄像头禁用配置存在"
-          else
-            echo "✗ 驾驶员摄像头禁用配置丢失！"; FAIL=1
-          fi
-
-          # 3. 核心适配文件必须存在
+          # 2. 核心定制适配文件必须存在
           for f in openpilot/selfdrive/car/China_tuning.py \
                    openpilot/selfdrive/ui/China_theme.py \
-                   openpilot/selfdrive/car/cruise.py \
-                   openpilot/selfdrive/controls/radard.py; do
+                   opendbc_repo/opendbc/car/changan/values.py \
+                   opendbc_repo/opendbc/car/changan/fingerprints.py \
+                   opendbc_repo/opendbc/safety/modes/changan.h; do
             if [ -f "$f" ]; then
               echo "✓ $f"
             else
@@ -182,23 +176,30 @@ jobs:
             fi
           done
 
-          # 4. card.py 中的调参钩子必须保留
+          # 3. card.py 中的调参钩子必须保留
           if grep -q "apply_idd_tuning" openpilot/selfdrive/car/card.py; then
             echo "✓ card.py 调参钩子存在"
           else
             echo "✗ card.py 调参钩子丢失！"; FAIL=1
           fi
 
-          # 5. Python 语法检查（核心文件）
+          # 4. Python 语法检查（核心文件）
           python3 -m py_compile openpilot/selfdrive/car/China_tuning.py 2>/dev/null \
             && echo "✓ China_tuning.py 语法正常" \
             || { echo "✗ China_tuning.py 语法错误！"; FAIL=1; }
 
-          # 6. 子模块配置必须为绝对 URL
+          # 5. 子模块配置必须为绝对 URL
           if grep -q '\.\./\.\./commaai' .gitmodules 2>/dev/null; then
             echo "✗ .gitmodules 出现相对路径（设备装不上）！"; FAIL=1
           else
             echo "✓ .gitmodules 使用绝对 URL"
+          fi
+
+          # 6. opendbc 子模块必须指向 China 分支
+          if grep -q 'ChinaLeads/opendbc' .gitmodules 2>/dev/null; then
+            echo "✓ opendbc 子模块指向 ChinaLeads/opendbc"
+          else
+            echo "✗ opendbc 子模块未指向正确仓库！"; FAIL=1
           fi
 
           if [ "$FAIL" -eq 0 ]; then
