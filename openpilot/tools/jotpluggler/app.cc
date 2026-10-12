@@ -263,11 +263,11 @@ void configure_style() {
     }
     return font;
   };
-  if (ImFont *font = add_font_with_icons(fonts_dir / "Inter-Regular.ttf", 16.0f); font != nullptr) {
+  if (ImFont *font = add_font_with_icons(fonts_dir / "AlibabaPuHuiTi-2-Regular.ttf", 16.0f); font != nullptr) {
     g_ui_font = font;
     io.FontDefault = font;
   }
-  g_ui_bold_font = add_font_with_icons(fonts_dir / "Inter-SemiBold.ttf", 16.75f);
+  g_ui_bold_font = add_font_with_icons(fonts_dir / "AlibabaPuHuiTi-2-Bold.ttf", 16.75f);
   if (g_ui_font == nullptr) {
     if (ImFont *font = add_font_with_icons(fonts_dir / "JetBrainsMono-Medium.ttf", 15.75f); font != nullptr) {
       g_mono_font = font;
@@ -1614,7 +1614,6 @@ void draw_pane_windows(AppSession *session, UiState *state) {
 void draw_workspace(AppSession *session, const UiMetrics &ui, UiState *state) {
   state->custom_series.selected = false;
   state->logs.selected = false;
-  state->init_data_selected = false;
   ImGui::SetNextWindowPos(ImVec2(ui.content_x, ui.content_y));
   ImGui::SetNextWindowSize(ImVec2(ui.content_w, ui.content_h));
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -1710,11 +1709,6 @@ void draw_workspace(AppSession *session, const UiMetrics &ui, UiState *state) {
           state->logs.request_select = false;
           state->logs.selected = true;
           draw_logs_tab(session, state);
-          ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("initData##workspace_init_data")) {
-          state->init_data_selected = true;
-          draw_init_data_tab(session, state);
           ImGui::EndTabItem();
         }
         if (custom_series_tab_open) {

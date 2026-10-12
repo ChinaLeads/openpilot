@@ -110,7 +110,6 @@ public:
   void setMessage(const MessageId &id);
   void draw();
   static float minimumWidth();
-  static float minimumHeight();
   void signalHovered(const cabana::Signal *sig);  // handler for BinaryView::signalHovered
   void updateChartState();
   void selectSignal(const cabana::Signal *sig, bool expand = false);
@@ -166,7 +165,6 @@ private:
   static ValidState validateEditor(const SignalModel::Item *item, std::string &text);
 
   float value_column_width_ = 0;
-  bool compact_ = false;
   float name_column_width_ = 150;
   bool editor_open_on_press_ = false;
   // computed while drawing the tree: the first top-level row whose own row is visible (a signal whose header
@@ -192,7 +190,6 @@ private:
   std::function<void()> pending_commit_;
   SignalModel::Item *editing_item_ = nullptr;  // the open text editor
   std::string edit_text_;
-  int edit_int_ = 0;
   bool editor_active_ = false;   // editor had the keyboard focus last frame
   bool refocus_editor_ = false;  // reopen the editor rejected by the validator
   bool enter_pressed_ = false;

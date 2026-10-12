@@ -47,6 +47,7 @@ kj::Array<capnp::word> logger_build_init_data(bool route_log) {
   init.setGitCommitDate(params_map["GitCommitDate"]);
   init.setGitBranch(params_map["GitBranch"]);
   init.setGitRemote(params_map["GitRemote"]);
+  init.setPassive(false);
   init.setDongleId(params_map["DongleId"]);
 
   // for prebuilt branches

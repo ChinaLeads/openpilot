@@ -165,7 +165,7 @@ void draw() {
     const std::string label = (is_dir ? std::string(icon::FOLDER) : std::string(icon::FILE_EARMARK)) + "  " + name;
     ImGui::PushID(static_cast<int>(i));
     const bool selected = !is_dir && name == s.filename;
-    if (selectable(label.c_str(), selected, ImGuiSelectableFlags_AllowDoubleClick)) {
+    if (ImGui::Selectable(label.c_str(), selected, ImGuiSelectableFlags_AllowDoubleClick)) {
       const bool double_clicked = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
       if (is_dir) {
         if (double_clicked) {
@@ -188,12 +188,10 @@ void draw() {
   if (!pending_dir.empty()) setDir(pending_dir);
 
   if (s.mode != Mode::Directory) {
-    const std::string filter = s.extension.empty() ? "*" : "*" + s.extension;
-    ImGui::SetNextItemWidth(-(ImGui::CalcTextSize(filter.c_str()).x + ImGui::GetStyle().ItemSpacing.x));
+    ImGui::SetNextItemWidth(-90.0f);
     if (inputText("##name", &s.filename, "File name", ImGuiInputTextFlags_EnterReturnsTrue)) ok = true;
     ImGui::SameLine();
-    ImGui::AlignTextToFramePadding();
-    ImGui::TextDisabled("%s", filter.c_str());
+    ImGui::TextDisabled("%s", s.extension.empty() ? "*" : ("*" + s.extension).c_str());
   }
   const char *accept_label = s.mode == Mode::SaveFile ? "Save" : (s.mode == Mode::Directory ? "Choose" : "Open");
   dialogButtons(accept_label, &ok, &cancel);

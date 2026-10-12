@@ -1,7 +1,8 @@
 from openpilot.cereal import log
 from openpilot.common.params import Params, UnknownKeyName
+from openpilot.system.loggerd.deleter import cleanup_old_logs, cleanup_uploaded_segments
 from openpilot.system.ui.widgets import Widget
-from openpilot.system.ui.widgets.list_view import multiple_button_item, toggle_item
+from openpilot.system.ui.widgets.list_view import multiple_button_item, toggle_item, button_item
 from openpilot.system.ui.widgets.scroller_tici import Scroller
 from openpilot.system.ui.widgets.confirm_dialog import ConfirmDialog
 from openpilot.system.ui.lib.application import gui_app
@@ -14,20 +15,20 @@ PERSONALITY_TO_INT = log.LongitudinalPersonality.schema.enumerants
 # Description constants
 DESCRIPTIONS = {
   "OpenpilotEnabledToggle": tr_noop(
-    "Use the openpilot system for adaptive cruise control and lane keep driver assistance. " +
+    "Use the China system for adaptive cruise control and lane keep driver assistance. " +
     "Your attention is required at all times to use this feature."
   ),
-  "DisengageOnAccelerator": tr_noop("When enabled, pressing the accelerator pedal will disengage openpilot."),
+  "DisengageOnAccelerator": tr_noop("When enabled, pressing the accelerator pedal will disengage China."),
   "LongitudinalPersonality": tr_noop(
-    "Standard is recommended. In aggressive mode, openpilot will follow lead cars closer and be more aggressive with the gas and brake. " +
-    "In relaxed mode openpilot will stay further away from lead cars. On supported cars, you can cycle through these personalities with " +
+    "Standard is recommended. In aggressive mode, China will follow lead cars closer and be more aggressive with the gas and brake. " +
+    "In relaxed mode China will stay further away from lead cars. On supported cars, you can cycle through these personalities with " +
     "your steering wheel distance button."
   ),
   "IsLdwEnabled": tr_noop(
     "Receive alerts to steer back into the lane when your vehicle drifts over a detected lane line " +
     "without a turn signal activated while driving over 31 mph (50 km/h)."
   ),
-  "AlwaysOnDM": tr_noop("Enable driver monitoring even when openpilot is not engaged."),
+  "AlwaysOnDM": tr_noop("Enable driver monitoring even when China is not engaged."),
   'RecordFront': tr_noop("Upload data from the cabin camera and help improve the driver monitoring algorithm."),
   "IsMetric": tr_noop("Display speed in km/h instead of mph."),
   "RecordAudio": tr_noop("Record and store microphone audio while driving. The audio will be included in the dashcam video in comma connect."),
@@ -43,7 +44,7 @@ class TogglesLayout(Widget):
     # param, title, desc, icon, needs_restart
     self._toggle_defs = {
       "OpenpilotEnabledToggle": (
-        lambda: tr("Enable openpilot"),
+        lambda: tr("Enable China"),
         DESCRIPTIONS["OpenpilotEnabledToggle"],
         "chffr_wheel.png",
         True,
@@ -122,7 +123,7 @@ class TogglesLayout(Widget):
       # Make description callable for live translation
       additional_desc = ""
       if needs_restart and not locked:
-        additional_desc = tr("Changing this setting will restart openpilot if the car is powered on.")
+        additional_desc = tr("Changing this setting will restart China if the car is powered on.")
       toggle.set_description(lambda og_desc=toggle.description, add_desc=additional_desc: tr(og_desc) + (" " + tr(add_desc) if add_desc else ""))
 
       # track for engaged state updates
@@ -134,6 +135,66 @@ class TogglesLayout(Widget):
       # insert longitudinal personality after NDOG toggle
       if param == "DisengageOnAccelerator":
         self._toggles["LongitudinalPersonality"] = self._long_personality_setting
+
+    # === China: Z6 iDD dedicated tuning items ===
+    self._idd_launch_setting = multiple_button_item(
+      lambda: tr("起步加速强度 (Z6 iDD)"),
+      lambda: tr("Z6 iDD 起步加速补偿强度：轻 0.20 / 标准 0.35 / 运动 0.50。熄火重启后生效。"),
+      buttons=[lambda: tr("轻"), lambda: tr("标准"), lambda: tr("运动")],
+      button_width=150,
+      selected_index=self._get_idd_launch_index(),
+      callback=self._set_idd_launch_boost,
+      icon="speed_limit.png",
+    )
+    self._idd_eps_setting = multiple_button_item(
+      lambda: tr("大角度转向补偿 (Z6 iDD)"),
+      lambda: tr("Z6 iDD 大角度弯道转向补偿（EPS 横向加速度预算）：标准 4.6 / 增强 5.2 / 最大 5.8。熄火重启后生效。"),
+      buttons=[lambda: tr("标准"), lambda: tr("增强"), lambda: tr("最大")],
+      button_width=150,
+      selected_index=self._get_idd_eps_index(),
+      callback=self._set_idd_eps_budget,
+      icon="chffr_wheel.png",
+    )
+    self._toggles["IDDLaunchBoostLevel"] = self._idd_launch_setting
+    self._toggles["IDDEpsBudget"] = self._idd_eps_setting
+
+    # === China: Dashcam retention settings ===
+    self._retention_setting = multiple_button_item(
+      lambda: tr("录像保留时长"),
+      lambda: tr("超过该时长的本地旧录像段将自动删除（每天检查一次）。设为永久保留则只保留空间兜底清理。"),
+      buttons=[lambda: tr("30天"), lambda: tr("90天"), lambda: tr("180天"), lambda: tr("365天"), lambda: tr("永久保留")],
+      button_width=150,
+      selected_index=self._get_retention_index(),
+      callback=self._set_retention_days,
+      icon="metric.png",
+    )
+    self._cleanup_uploaded_button = button_item(
+      lambda: tr("立即清理所有已上传录像"),
+      lambda: tr("立即执行"),
+      lambda: tr("这会删除所有已上传至云端的本地录像段，释放存储空间。未上传的录像不会被删除。此操作不可撤销。"),
+      callback=self._cleanup_uploaded_callback,
+    )
+    self._toggles["RecordRetentionDays"] = self._retention_setting
+    self._toggles["CleanupUploadedSegments"] = self._cleanup_uploaded_button
+
+    # === China: System log retention settings ===
+    self._syslog_retention_setting = multiple_button_item(
+      lambda: tr("系统日志保留时长"),
+      lambda: tr("超过该时长的 /data/log/ 下系统调试日志（swaglog）将自动删除（每天检查一次）。设为永久保留则不按时间清理，仅靠空间兜底。"),
+      buttons=[lambda: tr("7天"), lambda: tr("30天"), lambda: tr("90天"), lambda: tr("365天"), lambda: tr("永久保留")],
+      button_width=150,
+      selected_index=self._get_syslog_retention_index(),
+      callback=self._set_syslog_retention_days,
+      icon="metric.png",
+    )
+    self._cleanup_syslog_button = button_item(
+      lambda: tr("立即清理系统日志"),
+      lambda: tr("立即执行"),
+      lambda: tr("这会立即删除设备上 /data/log/ 下的所有系统调试日志（swaglog），释放存储空间。此操作不可撤销。"),
+      callback=self._cleanup_syslog_callback,
+    )
+    self._toggles["SysLogRetentionDays"] = self._syslog_retention_setting
+    self._toggles["CleanupSysLogs"] = self._cleanup_syslog_button
 
     self._update_experimental_mode_icon()
     self._scroller = Scroller(list(self._toggles.values()), line_separator=True, spacing=0)
@@ -156,10 +217,10 @@ class TogglesLayout(Widget):
     ui_state.update_params()
 
     e2e_description = tr(
-      "openpilot defaults to driving in chill mode. Experimental mode enables alpha-level features that aren't ready for chill mode. " +
+      "China defaults to driving in chill mode. Experimental mode enables alpha-level features that aren't ready for chill mode. " +
       "Experimental features are listed below:<br>" +
       "<h4>End-to-End Longitudinal Control</h4><br>" +
-      "Let the driving model control the gas and brakes. openpilot will drive as it thinks a human would, including stopping for red lights and stop signs. " +
+      "Let the driving model control the gas and brakes. China will drive as it thinks a human would, including stopping for red lights and stop signs. " +
       "Since the driving model decides the speed to drive, the set speed will only act as an upper bound. This is an alpha quality feature; " +
       "mistakes should be expected.<br>" +
       "<h4>New Driving Visualization</h4><br>" +
@@ -181,13 +242,13 @@ class TogglesLayout(Widget):
 
         unavailable = tr("Experimental mode is currently unavailable on this car since the car's stock ACC is used for longitudinal control.")
 
-        long_desc = unavailable + " " + tr("openpilot longitudinal control may come in a future update.")
+        long_desc = unavailable + " " + tr("China longitudinal control may come in a future update.")
         if ui_state.CP.alphaLongitudinalAvailable:
           if self._is_release:
-            long_desc = unavailable + " " + tr("An alpha version of openpilot longitudinal control can be tested, along with " +
+            long_desc = unavailable + " " + tr("An alpha version of China longitudinal control can be tested, along with " +
                                                "Experimental mode, on non-release branches.")
           else:
-            long_desc = tr("Enable the openpilot longitudinal control (alpha) toggle to allow Experimental mode.")
+            long_desc = tr("Enable the China longitudinal control (alpha) toggle to allow Experimental mode.")
 
         self._toggles["ExperimentalMode"].set_description("<b>" + long_desc + "</b><br><br>" + e2e_description)
     else:
@@ -241,5 +302,98 @@ class TogglesLayout(Widget):
     if self._toggle_defs[param][3]:
       self._params.put_bool("OnroadCycleRequested", True, block=True)
 
+  def _get_idd_launch_index(self) -> int:
+    try:
+      v = self._params.get("IDDLaunchBoostLevel")
+      if v is not None and v in ("0", "1", "2"):
+        return int(v)
+    except Exception:
+      pass
+    return 1  # 标准
+
+  def _set_idd_launch_boost(self, index: int):
+    self._params.put("IDDLaunchBoostLevel", str(index), block=True)
+
+  def _get_idd_eps_index(self) -> int:
+    try:
+      v = float(self._params.get("IDDEpsBudget") or 4.6)
+    except Exception:
+      v = 4.6
+    if v <= 4.6:
+      return 0  # 标准
+    if v >= 5.4:
+      return 2  # 最大
+    return 1    # 增强
+
+  def _set_idd_eps_budget(self, index: int):
+    self._params.put("IDDEpsBudget", str([4.6, 5.2, 5.8][index]), block=True)
+
   def _set_longitudinal_personality(self, button_index: int):
     self._params.put("LongitudinalPersonality", button_index, block=True)
+
+  # === China: Dashcam retention helpers ===
+  RETENTION_OPTIONS = [30, 90, 180, 365, 0]  # 0 = keep forever
+
+  def _get_retention_index(self) -> int:
+    try:
+      v = int(self._params.get("RecordRetentionDays") or 180)
+    except (ValueError, TypeError):
+      v = 180
+    try:
+      return self.RETENTION_OPTIONS.index(v)
+    except ValueError:
+      return 2  # default to 180 days
+
+  def _set_retention_days(self, index: int):
+    days = self.RETENTION_OPTIONS[index]
+    self._params.put("RecordRetentionDays", str(days), block=True)
+
+  def _cleanup_uploaded_callback(self):
+    def confirm_callback(result: DialogResult):
+      if result == DialogResult.CONFIRM:
+        try:
+          count, _ = cleanup_uploaded_segments()
+          msg = tr(f"已清理 {count} 个已上传录像段。") if count else tr("没有可清理的已上传录像段。")
+        except Exception as e:
+          msg = tr(f"清理失败: {e}")
+        dlg = ConfirmDialog(msg, tr("确定"), cancel_text="", rich=False, callback=None)
+        gui_app.push_widget(dlg)
+
+    content = (f"<h1>{tr('立即清理已上传录像')}</h1><br>" +
+               f"<p>{tr('这会删除所有已上传至云端的本地录像段。未上传的录像不会被删除。此操作不可撤销。')}</p>")
+    dlg = ConfirmDialog(content, tr("确认清理"), rich=True, callback=confirm_callback)
+    gui_app.push_widget(dlg)
+
+  # === China: System log retention helpers ===
+  SYSLOG_RETENTION_OPTIONS = [7, 30, 90, 365, 0]  # 0 = keep forever
+
+  def _get_syslog_retention_index(self) -> int:
+    try:
+      v = int(self._params.get("SysLogRetentionDays") or 30)
+    except (ValueError, TypeError):
+      v = 30
+    try:
+      return self.SYSLOG_RETENTION_OPTIONS.index(v)
+    except ValueError:
+      return 1  # default to 30 days
+
+  def _set_syslog_retention_days(self, index: int):
+    days = self.SYSLOG_RETENTION_OPTIONS[index]
+    self._params.put("SysLogRetentionDays", str(days), block=True)
+
+  def _cleanup_syslog_callback(self):
+    def confirm_callback(result: DialogResult):
+      if result == DialogResult.CONFIRM:
+        try:
+          count, _ = cleanup_old_logs()
+          msg = tr(f"已清理 {count} 个系统日志文件。") if count else tr("没有可清理的系统日志文件。")
+        except Exception as e:
+          msg = tr(f"清理失败: {e}")
+        dlg = ConfirmDialog(msg, tr("确定"), cancel_text="", rich=False, callback=None)
+        gui_app.push_widget(dlg)
+
+    content = (f"<h1>{tr('立即清理系统日志')}</h1><br>" +
+               f"<p>{tr('这会立即删除设备上 /data/log/ 下的所有系统调试日志（swaglog），释放存储空间。此操作不可撤销。')}</p>")
+    dlg = ConfirmDialog(content, tr("确认清理"), rich=True, callback=confirm_callback)
+    gui_app.push_widget(dlg)
+

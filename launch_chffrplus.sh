@@ -4,6 +4,30 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 source "$DIR/launch_env.sh"
 
+function configure_ssh_port {
+  # Set SSH port to 88 (idempotent)
+  if [ ! -f /etc/ssh/sshd_config ]; then
+    return 0
+  fi
+
+  CURRENT_PORT=$(grep -E '^[[:space:]]*Port[[:space:]]+' /etc/ssh/sshd_config 2>/dev/null | awk '{print $2}' | tail -1)
+  if [ "$CURRENT_PORT" = "88" ]; then
+    return 0
+  fi
+
+  # AGNOS rootfs is read-only by default, remount rw to patch
+  sudo mount -o rw,remount / 2>/dev/null || true
+  if grep -qE '^[[:space:]]*#?[[:space:]]*Port[[:space:]]+' /etc/ssh/sshd_config; then
+    sudo sed -i -E 's/^[[:space:]]*#?[[:space:]]*Port[[:space:]]+[0-9]+/Port 88/' /etc/ssh/sshd_config
+  else
+    echo "Port 88" | sudo tee -a /etc/ssh/sshd_config > /dev/null
+  fi
+  sudo systemctl daemon-reload 2>/dev/null || true
+  sudo systemctl restart ssh 2>/dev/null || true
+  sudo systemctl restart sshd 2>/dev/null || true
+  sudo mount -o ro,remount / 2>/dev/null || true
+}
+
 function agnos_init {
   # TODO: move this to agnos
   sudo rm -f /data/etc/NetworkManager/system-connections/*.nmmeta
@@ -18,21 +42,21 @@ function agnos_init {
   sudo chmod 660 /dev/adsprpc-smd /dev/ion /dev/kgsl-3d0
 
   # Check if AGNOS update is required
-  if [ "$(< /VERSION)" != "$AGNOS_VERSION" ]; then
+  if [ $(< /VERSION) != "$AGNOS_VERSION" ]; then
     AGNOS_PY="$DIR/openpilot/common/hardware/comma/agnos.py"
     MANIFEST="$DIR/openpilot/system/hardware/comma/agnos.json"
-    if "$AGNOS_PY" --verify "$MANIFEST"; then
+    if $AGNOS_PY --verify $MANIFEST; then
       sudo reboot
     fi
     while true; do
-      "$DIR/openpilot/common/hardware/comma/updater" "$AGNOS_PY" "$MANIFEST"
+      $DIR/openpilot/common/hardware/comma/updater $AGNOS_PY $MANIFEST
     done
   fi
 }
 
 function launch {
   # Remove orphaned git lock if it exists on boot
-  [ -f "$DIR/.git/index.lock" ] && rm -f "$DIR/.git/index.lock"
+  [ -f "$DIR/.git/index.lock" ] && rm -f $DIR/.git/index.lock
 
   # Check to see if there's a valid overlay-based update available. Conditions
   # are as follows:
@@ -44,7 +68,7 @@ function launch {
   #    that completed successfully and synced to disk.
 
   if [ -f "${DIR}/.overlay_init" ]; then
-    find "${DIR}/.git" -newer "${DIR}/.overlay_init" | grep -q '.' 2> /dev/null
+    find ${DIR}/.git -newer ${DIR}/.overlay_init | grep -q '.' 2> /dev/null
     if [ $? -eq 0 ]; then
       echo "${DIR} has been modified, skipping overlay update installation"
     else
@@ -53,9 +77,9 @@ function launch {
           echo "Valid overlay update found, installing"
           LAUNCHER_LOCATION="${BASH_SOURCE[0]}"
 
-          mv "$DIR" /data/safe_staging/old_openpilot
-          mv "${STAGING_ROOT}/finalized" "$DIR"
-          cd "$DIR"
+          mv $DIR /data/safe_staging/old_openpilot
+          mv "${STAGING_ROOT}/finalized" $DIR
+          cd $DIR
 
           echo "Restarting launch script ${LAUNCHER_LOCATION}"
           unset AGNOS_VERSION
@@ -69,7 +93,7 @@ function launch {
   fi
 
   # handle pythonpath
-  ln -sfn "$(pwd)" /data/pythonpath
+  ln -sfn $(pwd) /data/pythonpath
   export PYTHONPATH="$PWD"
 
   # submodule package symlinks for PYTHONPATH imports on device.
@@ -83,6 +107,7 @@ function launch {
   # hardware specific init
   if [ -f /AGNOS ]; then
     agnos_init
+    configure_ssh_port
   fi
 
   # write tmux scrollback to a file
@@ -90,7 +115,7 @@ function launch {
 
   # start manager
   cd openpilot/system/manager
-  if [ ! -f "$DIR/prebuilt" ]; then
+  if [ ! -f $DIR/prebuilt ]; then
     ./build.py
   fi
   ./manager.py

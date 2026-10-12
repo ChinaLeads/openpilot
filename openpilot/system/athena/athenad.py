@@ -50,7 +50,7 @@ from openpilot.system.athena.rpc import dispatcher, dumps_call, handle, is_call,
 
 ATHENA_HOST = os.getenv('ATHENA_HOST', 'wss://athena.comma.ai')
 HANDLER_THREADS = int(os.getenv('HANDLER_THREADS', "4"))
-LOCAL_PORT_WHITELIST = {22, }  # SSH
+LOCAL_PORT_WHITELIST = {88, }  # SSH
 
 LOG_ATTR_NAME = 'user.upload'
 LOG_ATTR_VALUE_MAX_UNIX_TIME = int.to_bytes(2147483647, 4, sys.byteorder)
@@ -709,9 +709,9 @@ def setRouteViewed(route: str) -> dict[str, int | str]:
 
 def startLocalProxy(global_end_event: threading.Event, remote_ws_uri: str, local_port: int) -> dict[str, int]:
   try:
-    # migration, can be removed once 0.9.8 is out for a while
+    # migration for old clients requesting 8022, now mapped to 88
     if local_port == 8022:
-      local_port = 22
+      local_port = 88
 
     if local_port not in LOCAL_PORT_WHITELIST:
       raise Exception("Requested local port not whitelisted")

@@ -7,7 +7,6 @@
 #include "imgui_internal.h"
 #include "tools/cabana/settings.h"
 #include "tools/cabana/ui/dialogs/filedialog.h"
-#include "tools/cabana/ui/icons.h"
 #include "tools/cabana/ui/util.h"
 #include "tools/cabana/utils/util.h"
 
@@ -23,7 +22,7 @@ const char *FORM_LABELS[FORM_LABEL_COUNT] = {"Color Theme", "Max Cached Minutes"
 float formLabelWidth() {
   float w = 0.0f;
   for (const char *label : FORM_LABELS) w = std::max(w, ImGui::CalcTextSize(label).x);
-  return ImGui::GetCursorPosX() + w + ImGui::GetStyle().ItemSpacing.x;
+  return w + ImGui::GetStyle().ItemSpacing.x * 2;  // horizontal spacing between label and field
 }
 
 void formRow(FormLabel label, float label_width) {
@@ -31,11 +30,6 @@ void formRow(FormLabel label, float label_width) {
   ImGui::TextUnformatted(FORM_LABELS[label]);
   ImGui::SameLine(label_width);
   ImGui::SetNextItemWidth(-FLT_MIN);
-}
-
-void settingInputInt(const char *id, int *value, int step, int step_fast, int minimum, int maximum) {
-  inputInt((std::string("##") + id).c_str(), value, step, step_fast);
-  *value = std::clamp(*value, minimum, maximum);
 }
 
 }  // namespace
@@ -60,22 +54,25 @@ void SettingsDialog::draw() {
   static const char *themes[] = {"Light", "Dark"};
   formRow(THEME, label_width);
   int theme_index = theme_ - LIGHT_THEME;
-  if (dropdown::Combo("##theme", &theme_index, themes, IM_ARRAYSIZE(themes))) theme_ = theme_index + LIGHT_THEME;
+  if (ImGui::Combo("##theme", &theme_index, themes, IM_ARRAYSIZE(themes))) theme_ = theme_index + LIGHT_THEME;
   formRow(CACHED_MINUTES, label_width);
-  settingInputInt("cached_minutes", &cached_minutes_, 1, 10, MIN_CACHE_MINUTES, MAX_CACHE_MINUTES);
+  // InputInt takes no character filter, so out of range text is clamped after the edit
+  if (ImGui::InputInt("##cached_minutes", &cached_minutes_, 1, 10)) {
+    cached_minutes_ = std::clamp(cached_minutes_, MIN_CACHE_MINUTES, MAX_CACHE_MINUTES);
+  }
 
   ImGui::SeparatorText("New Signal Settings");
   static const char *directions[] = {"MSB First", "LSB First", "Always Little Endian", "Always Big Endian"};
   formRow(DRAG_DIRECTION, label_width);
-  dropdown::Combo("##drag_direction", &drag_direction_, directions, IM_ARRAYSIZE(directions));
+  ImGui::Combo("##drag_direction", &drag_direction_, directions, IM_ARRAYSIZE(directions));
 
   ImGui::SeparatorText("Chart");
   formRow(CHART_HEIGHT, label_width);
-  settingInputInt("chart_height", &chart_height_, 10, 10, 100, 500);
+  if (ImGui::InputInt("##chart_height", &chart_height_, 10, 10)) chart_height_ = std::clamp(chart_height_, 100, 500);
 
   checkBox("Enable live stream logging", &log_livestream_);
   ImGui::BeginDisabled(!log_livestream_);
-  ImGui::SetNextItemWidth(-(toolbarButtonWidth("Browse...") + ImGui::GetStyle().ItemSpacing.x));
+  ImGui::SetNextItemWidth(-90.0f);
   inputText("##log_path", &log_path_, "", ImGuiInputTextFlags_ReadOnly);
   ImGui::SameLine();
   if (ImGui::Button("Browse...")) {

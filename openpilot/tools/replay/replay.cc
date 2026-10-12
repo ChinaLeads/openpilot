@@ -40,7 +40,8 @@ void Replay::setupServices(const std::vector<std::string> &allow, const std::vec
   auto event_schema = capnp::Schema::from<cereal::Event>().asStruct();
   sockets_.resize(event_schema.getUnionFields().size(), nullptr);
 
-  auto &active_services = active_services_;
+  std::vector<const char *> active_services;
+  active_services.reserve(services.size());
 
   for (const auto &[name, _] : services) {
     bool is_blocked = std::find(block.begin(), block.end(), name) != block.end();
@@ -54,6 +55,9 @@ void Replay::setupServices(const std::vector<std::string> &allow, const std::vec
 
   std::string services_str = join(active_services, ", ");
   rInfo("active services: %s", services_str.c_str());
+  if (!sm_) {
+    pm_ = std::make_unique<PubMaster>(active_services);
+  }
 }
 
 void Replay::setupSegmentManager(bool has_filters) {
@@ -69,15 +73,6 @@ void Replay::setupSegmentManager(bool has_filters) {
 }
 
 Replay::~Replay() {
-  stop();
-  camera_server_.reset();
-  seg_mgr_.reset();
-}
-
-void Replay::stop() {
-  // Merge callbacks access both Replay and its owner. Join them while all objects
-  // and their owning pointers are still alive, before stopping the playback thread.
-  seg_mgr_->stop();
   if (stream_thread_.joinable()) {
     rInfo("shutdown: in progress...");
     interruptStream([this]() {
@@ -87,6 +82,8 @@ void Replay::stop() {
     stream_thread_.join();
     rInfo("shutdown: done");
   }
+  camera_server_.reset();
+  seg_mgr_.reset();
 }
 
 bool Replay::load() {
@@ -238,7 +235,6 @@ void Replay::publishMessage(const Event *e) {
   if (event_filter_ && event_filter_(e)) return;
 
   if (!sm_) {
-    if (!pm_) pm_ = std::make_unique<PubMaster>(active_services_);  // consumers with an event filter never need one
     auto bytes = e->data.asBytes();
     int ret = pm_->send(sockets_[e->which], (capnp::byte *)bytes.begin(), bytes.size());
     if (ret == -1) {

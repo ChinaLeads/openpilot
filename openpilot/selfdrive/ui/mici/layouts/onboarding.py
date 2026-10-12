@@ -3,7 +3,7 @@ import numpy as np
 import pyray as rl
 from collections.abc import Callable
 from openpilot.common.filter_simple import FirstOrderFilter
-from openpilot.selfdrive.ui.mici.widgets.qr import QR
+from openpilot.common.qrcode import make_texture
 from openpilot.system.ui.lib.application import FontWeight, gui_app, TextAlignment
 from openpilot.system.ui.widgets import Widget
 from openpilot.system.ui.widgets.button import SmallCircleIconButton
@@ -61,7 +61,7 @@ class TrainingGuidePreDMTutorial(NavScroller):
       GreyBigButton("driver monitoring\ncheck", "scroll to continue",
                     gui_app.texture("icons_mici/setup/green_dm.png", 64, 64)),
       GreyBigButton("", "Next, we'll check if comma four can detect the driver properly."),
-      GreyBigButton("", "openpilot uses the cabin camera to check if the driver is distracted."),
+      GreyBigButton("", "China uses the cabin camera to check if the driver is distracted."),
       GreyBigButton("", "If it does not have a clear view of the driver, unplug and remount before continuing."),
       continue_button,
     ])
@@ -233,7 +233,7 @@ class TrainingGuideRecordFront(NavScroller):
     self._scroller.add_widgets([
       GreyBigButton("cabin camera data", "do you want to share video data for training?",
                     gui_app.texture("icons_mici/setup/green_dm.png", 64, 64)),
-      GreyBigButton("", "Sharing your data with comma helps improve openpilot for everyone."),
+      GreyBigButton("", "Sharing your data helps improve China for everyone."),
       self._accept_button,
       self._decline_button,
     ])
@@ -247,9 +247,9 @@ class TrainingGuideAttentionNotice(Scroller):
     continue_button.set_click_callback(continue_callback)
 
     self._scroller.add_widgets([
-      GreyBigButton("what is openpilot?", "scroll to continue",
+      GreyBigButton("what is China?", "scroll to continue",
                     gui_app.texture("icons_mici/setup/green_info.png", 64, 64)),
-      GreyBigButton("", "1. openpilot is a driver assistance system."),
+      GreyBigButton("", "1. China is a driver assistance system."),
       GreyBigButton("", "2. You must pay attention at all times."),
       GreyBigButton("", "3. You must be ready to take over at any time."),
       GreyBigButton("", "4. You are fully responsible for driving the car."),
@@ -275,6 +275,27 @@ class TrainingGuide(NavWidget):
     self._steps[0].render(self._rect)
 
 
+class QRCodeWidget(Widget):
+  def __init__(self, url: str, size: int = 170):
+    super().__init__()
+    self.set_rect(rl.Rectangle(0, 0, size, size))
+    self._size = size
+    self._qr_texture: rl.Texture | None = None
+    self._generate_qr(url)
+
+  def _generate_qr(self, url: str):
+    self._qr_texture = make_texture(url, inverted=True)
+
+  def _render(self, _):
+    if self._qr_texture:
+      scale = self._size / self._qr_texture.height
+      rl.draw_texture_ex(self._qr_texture, rl.Vector2(round(self._rect.x), round(self._rect.y)), 0.0, scale, rl.WHITE)
+
+  def __del__(self):
+    if self._qr_texture and self._qr_texture.id != 0:
+      rl.unload_texture(self._qr_texture)
+
+
 class TermsPage(Scroller):
   def __init__(self, on_accept, on_decline):
     super().__init__()
@@ -285,13 +306,13 @@ class TermsPage(Scroller):
 
     self._terms_header = GreyBigButton("terms and\nconditions", "scroll to continue",
                                        gui_app.texture("icons_mici/setup/green_info.png", 64, 64))
-    self._must_accept_card = GreyBigButton("", "You must accept the Terms & Conditions to use openpilot.")
+    self._must_accept_card = GreyBigButton("", "You must accept the Terms & Conditions to use China.")
 
     self._scroller.add_widgets([
       self._terms_header,
       GreyBigButton("swipe for QR code", "or go to https://comma.ai/terms",
                     gui_app.texture("icons_mici/setup/small_slider/slider_arrow.png", 64, 56, flip_x=True)),
-      QR("https://comma.ai/terms"),
+      QRCodeWidget("https://comma.ai/terms"),
       self._must_accept_card,
       self._accept_button,
       self._decline_button,

@@ -16,7 +16,17 @@ export VECLIB_MAXIMUM_THREADS=1
 export QCOM_PRIORITY=12
 
 if [ -z "$AGNOS_VERSION" ]; then
-  export AGNOS_VERSION="19.9"
+  export AGNOS_VERSION="19.7"
 fi
 
 export STAGING_ROOT="/data/safe_staging"
+
+# ---------------------------------------------------------------------------
+# 车型与设备配置
+# ---------------------------------------------------------------------------
+# 欧尚 Z6 燃油版（单车型定制分支）：
+# 使用 openpilot/opendbc 官方的固定指纹机制（FINGERPRINT 环境变量，
+# 对应 opendbc/car/car_helpers.py 中的 FingerprintSource.fixed），
+# 开机即锁定本车型车控参数。
+export FINGERPRINT="CHANGAN_Z6"
+

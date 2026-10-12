@@ -172,7 +172,6 @@ class SelfdriveD:
     big_failed = big_active is False or model_unavailable or (self.big_model_active and not chestnut_present)
     if big_failed and not self.big_model_failed:
       self.events.add(EventName.bigModelFailed)
-      self.big_model_ready_t = time.monotonic()
     self.big_model_failed = big_failed
 
     # soft disable if the big model fails
@@ -200,9 +199,7 @@ class SelfdriveD:
 
     # Check for user bookmark press
     if self.sm.updated['userBookmark']:
-      prime_type = self.params.get("PrimeType")
-      paired = prime_type is not None and int(prime_type) >= 0
-      self.events.add(EventName.userBookmark if paired else EventName.userBookmarkNotPaired)
+      self.events.add(EventName.userBookmark)
 
     # Don't add any more events while in dashcam mode
     if self.CP.passive:
@@ -401,12 +398,11 @@ class SelfdriveD:
       self.logged_comm_issue = None
 
     if not self.CP.notCar and not big_model_settling:  # localization has nothing to work with during the load
-      # the defaults of a message that was never received are not a localizer failure
-      if self.sm.seen['deviceMotion'] and not self.sm['deviceMotion'].posenetOK:
+      if not self.sm['deviceMotion'].posenetOK:
         self.events.add(EventName.posenetInvalid)
-      if self.sm.seen['deviceMotion'] and not self.sm['deviceMotion'].inputsOK:
+      if not self.sm['deviceMotion'].inputsOK:
         self.events.add(EventName.locationdTemporaryError)
-      if (self.sm.seen['vehicleParameters'] and not self.sm['vehicleParameters'].valid and cal_status == log.ExtrinsicsCalibration.Status.calibrated and
+      if (not self.sm['vehicleParameters'].valid and cal_status == log.ExtrinsicsCalibration.Status.calibrated and
           not TESTING_CLOSET and (not SIMULATION or REPLAY)):
         self.events.add(EventName.paramsdTemporaryError)
 
@@ -454,7 +450,7 @@ class SelfdriveD:
 
     # TODO: fix simulator
     if not SIMULATION or REPLAY:
-      if self.sm['modelV2'].frameDropPerc > 1 and not big_model_settling:
+      if self.sm['modelV2'].frameDropPerc > 1:
         self.events.add(EventName.modeldLagging)
 
     # Decrement personality on distance button press

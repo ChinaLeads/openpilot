@@ -58,7 +58,9 @@ def host():
 class TestAthenadMethods(OpenpilotTestCase):
   @classmethod
   def setup_class(cls):
+    cls.SOCKET_PORT = 45454
     athenad.Api = MockApi  # ty: ignore[invalid-assignment]  # test double
+    athenad.LOCAL_PORT_WHITELIST = {cls.SOCKET_PORT}
 
   def setup_method(self):
     self.default_params = {
@@ -432,7 +434,7 @@ class TestAthenadMethods(OpenpilotTestCase):
     assert athenad.upload_queue.qsize() == 1
     assert asdict(athenad.upload_queue.queue[-1]) == asdict(item1)
 
-  def test_start_local_proxy(self, mock_create_connection, mocker):
+  def test_start_local_proxy(self, mock_create_connection):
     end_event = threading.Event()
 
     ws_recv = queue.Queue()
@@ -440,13 +442,11 @@ class TestAthenadMethods(OpenpilotTestCase):
     mock_ws = MockWebsocket(ws_recv, ws_send)
     mock_create_connection.return_value = mock_ws
 
-    echo_socket = EchoSocket(0)
-    port = echo_socket.socket.getsockname()[1]
-    mocker.patch('openpilot.system.athena.athenad.LOCAL_PORT_WHITELIST', {port})
+    echo_socket = EchoSocket(self.SOCKET_PORT)
     socket_thread = threading.Thread(target=echo_socket.run)
     socket_thread.start()
 
-    athenad.startLocalProxy(end_event, 'ws://localhost:1234', port)
+    athenad.startLocalProxy(end_event, 'ws://localhost:1234', self.SOCKET_PORT)
 
     ws_recv.put_nowait(b'ping')
     try:

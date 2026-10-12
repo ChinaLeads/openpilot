@@ -68,8 +68,7 @@ class ChartsWidget {
 public:
   ChartsWidget();
   ~ChartsWidget();  // out of line: the header users only see a forward declared ChartView
-  void draw();  // content only; MainWindow owns the dockable panel
-  size_t chartCount() const { return charts_.size(); }
+  void draw();  // content only; MainWindow wraps it in a child region or the floating window
   void showChart(const MessageId &id, const cabana::Signal *sig, bool show, bool merge);
   inline bool hasSignal(const MessageId &id, const cabana::Signal *sig) { return findChart(id, sig) != nullptr; }
   std::vector<std::string> serializeChartIds() const;
@@ -78,7 +77,9 @@ public:
 
   void setColumnCount(int n);
   void removeAll();
+  void setIsDocked(bool dock);
 
+  Observable<> toggleChartsDocking;
   Observable<> seriesChanged;
   Observable<double> showTip;
 
@@ -115,6 +116,8 @@ private:
   void drawDragPreview();
 
   LogSlider range_slider_{1000};
+  bool is_docked_ = true;
+  bool float_window_init_ = false;  // the floating window geometry is set once, right after undocking
 
   UndoStack zoom_undo_stack_;
 

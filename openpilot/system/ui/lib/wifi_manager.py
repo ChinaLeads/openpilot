@@ -203,8 +203,7 @@ class WifiManager:
     self._scan_lock = threading.Lock()
     self._scan_thread = threading.Thread(target=self._network_scanner, daemon=True)
     self._state_thread = threading.Thread(target=self._monitor_state, daemon=True)
-    if not self._exit:
-      self._initialize()
+    self._initialize()
     atexit.register(self.stop)
 
   def _initialize(self):

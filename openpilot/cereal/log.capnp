@@ -128,7 +128,6 @@ struct OnroadEvent @0xc4fa6047f024e718 {
     personalityChanged @91;
     aeb @92;
     userBookmark @95;
-    userBookmarkNotPaired @104;
     excessiveActuation @96;
     bigModelLoading @100;
     bigModelFailed @102;
@@ -167,7 +166,12 @@ struct InitData {
   gitSrcCommit @23 :Text;
   gitSrcCommitDate @24 :Text;
 
+  androidProperties @16 :Map(Text, Text);
+
+  pandaInfo @8 :PandaInfo;
+
   dirty @9 :Bool;
+  passive @12 :Bool;
   params @17 :Map(Text, Data);
 
   commands @19 :Map(Text, Data);
@@ -185,17 +189,6 @@ struct InitData {
     mici @7;  # comma four
   }
 
-  deprecated :group {
-    gctx @1 :Text;
-    androidBuildInfo @5 :Deprecated.AndroidBuildInfo;
-    androidSensors @6 :List(Deprecated.AndroidSensor);
-    chffrAndroidExtra @7 :ChffrAndroidExtra;
-    pandaInfo @8 :PandaInfo;
-    passive @12 :Bool;
-    iosBuildInfo @14 :Deprecated.IosBuildInfo;
-    androidProperties @16 :Map(Text, Text);
-  }
-
   struct PandaInfo {
     hasPanda @0 :Bool;
     dongleId @1 :Text;
@@ -205,6 +198,14 @@ struct InitData {
 
   struct ChffrAndroidExtra {
     allCameraCharacteristics @0 :Map(Text, Text);
+  }
+
+  deprecated :group {
+    gctx @1 :Text;
+    androidBuildInfo @5 :Deprecated.AndroidBuildInfo;
+    androidSensors @6 :List(Deprecated.AndroidSensor);
+    chffrAndroidExtra @7 :ChffrAndroidExtra;
+    iosBuildInfo @14 :Deprecated.IosBuildInfo;
   }
 }
 
@@ -571,9 +572,6 @@ struct PandaState @0xa7649e2575e4591e {
   controlsAllowedRESERVED1 @38 :Bool;
   controlsAllowedRESERVED2 @39 :Bool;
 
-  nmiReset @40 :Bool;
-  hardfaultReset @41 :Bool;
-
   enum FaultStatus {
     none @0;
     faultTemp @1;
@@ -696,7 +694,6 @@ struct PeripheralState {
 
 struct UsbState {
   devices @0 :List(Device);
-  connected @1 :Bool;
 
   struct Device {
     busnum @0 :UInt8;
@@ -1240,7 +1237,6 @@ struct LongitudinalPlan @0xe00b5b3eba12876c {
   shouldStop @37: Bool;
   allowThrottle @38: Bool;
   allowBrake @39: Bool;
-  accelBoost @40 :Float32;
 
 
   solverExecutionTime @35 :Float32;
@@ -2598,7 +2594,6 @@ struct Event {
     clocks @35 :Clocks;
     deviceState @6 :DeviceState;
     chestnutState @152 :ChestnutState;
-    chestnutGpuState @153 :ChestnutState;
     logMessage @18 :Text;
     errorLogMessage @85 :Text;
 

@@ -146,8 +146,8 @@ msgid "Change Language"
 msgstr "Change Language"
 
 #: openpilot/selfdrive/ui/layouts/settings/toggles.py
-msgid "Changing this setting will restart openpilot if the car is powered on."
-msgstr "Changing this setting will restart openpilot if the car is powered on."
+msgid "Changing this setting will restart China if the car is powered on."
+msgstr "Changing this setting will restart China if the car is powered on."
 
 #: openpilot/selfdrive/ui/widgets/pairing_dialog.py
 msgid "Click \"add new device\" and scan the QR code on the right"
@@ -170,8 +170,8 @@ msgid "Decline"
 msgstr "Decline"
 
 #: openpilot/selfdrive/ui/layouts/onboarding.py
-msgid "Decline, uninstall openpilot"
-msgstr "Decline, uninstall openpilot"
+msgid "Decline, uninstall China"
+msgstr "Decline, uninstall China"
 
 #: openpilot/selfdrive/ui/layouts/settings/settings.py
 msgid "Developer"
@@ -255,16 +255,16 @@ msgid "Enable Tethering"
 msgstr "Enable Tethering"
 
 #: openpilot/selfdrive/ui/layouts/settings/toggles.py
-msgid "Enable driver monitoring even when openpilot is not engaged."
-msgstr "Enable driver monitoring even when openpilot is not engaged."
+msgid "Enable driver monitoring even when China is not engaged."
+msgstr "Enable driver monitoring even when China is not engaged."
 
 #: openpilot/selfdrive/ui/layouts/settings/toggles.py
-msgid "Enable openpilot"
-msgstr "Enable openpilot"
+msgid "Enable China"
+msgstr "Enable China"
 
 #: openpilot/selfdrive/ui/layouts/settings/toggles.py
-msgid "Enable the openpilot longitudinal control (alpha) toggle to allow Experimental mode."
-msgstr "Enable the openpilot longitudinal control (alpha) toggle to allow Experimental mode."
+msgid "Enable the China longitudinal control (alpha) toggle to allow Experimental mode."
+msgstr "Enable the China longitudinal control (alpha) toggle to allow Experimental mode."
 
 #: openpilot/system/ui/widgets/network.py
 msgid "Enter APN"
@@ -376,8 +376,8 @@ msgid "MAX"
 msgstr "MAX"
 
 #: openpilot/selfdrive/ui/widgets/setup.py
-msgid "Maximize your training data uploads to improve openpilot's driving models."
-msgstr "Maximize your training data uploads to improve openpilot's driving models."
+msgid "Maximize your training data uploads to improve China's driving models."
+msgstr "Maximize your training data uploads to improve China's driving models."
 
 #: openpilot/selfdrive/ui/layouts/settings/device.py
 msgid "N/A"
@@ -542,8 +542,8 @@ msgid "Review Training Guide"
 msgstr "Review Training Guide"
 
 #: openpilot/selfdrive/ui/layouts/settings/device.py
-msgid "Review the rules, features, and limitations of openpilot"
-msgstr "Review the rules, features, and limitations of openpilot"
+msgid "Review the rules, features, and limitations of China"
+msgstr "Review the rules, features, and limitations of China"
 
 #: openpilot/selfdrive/ui/layouts/settings/software.py
 msgid "SELECT"
@@ -658,12 +658,12 @@ msgid "Waiting to start"
 msgstr "Waiting to start"
 
 #: openpilot/selfdrive/ui/layouts/onboarding.py
-msgid "Welcome to openpilot"
-msgstr "Welcome to openpilot"
+msgid "Welcome to China"
+msgstr "Welcome to China"
 
 #: openpilot/selfdrive/ui/layouts/settings/toggles.py
-msgid "When enabled, pressing the accelerator pedal will disengage openpilot."
-msgstr "When enabled, pressing the accelerator pedal will disengage openpilot."
+msgid "When enabled, pressing the accelerator pedal will disengage China."
+msgstr "When enabled, pressing the accelerator pedal will disengage China."
 
 #: openpilot/selfdrive/ui/layouts/sidebar.py
 msgid "Wi-Fi"
@@ -678,12 +678,12 @@ msgid "Wrong password"
 msgstr "Wrong password"
 
 #: openpilot/selfdrive/ui/layouts/onboarding.py
-msgid "You must accept the Terms and Conditions in order to use openpilot."
-msgstr "You must accept the Terms and Conditions in order to use openpilot."
+msgid "You must accept the Terms and Conditions in order to use China."
+msgstr "You must accept the Terms and Conditions in order to use China."
 
 #: openpilot/selfdrive/ui/layouts/onboarding.py
-msgid "You must accept the Terms and Conditions to use openpilot. Read the latest terms at https://comma.ai/terms before continuing."
-msgstr "You must accept the Terms and Conditions to use openpilot. Read the latest terms at https://comma.ai/terms before continuing."
+msgid "You must accept the Terms and Conditions to use China. Read the latest terms at https://comma.ai/terms before continuing."
+msgstr "You must accept the Terms and Conditions to use China. Read the latest terms at https://comma.ai/terms before continuing."
 
 #: openpilot/selfdrive/ui/onroad/cabin_camera_dialog.py
 msgid "camera starting"
@@ -750,20 +750,20 @@ msgid "now"
 msgstr "now"
 
 #: openpilot/selfdrive/ui/layouts/settings/developer.py
-msgid "openpilot Longitudinal Control (Alpha)"
-msgstr "openpilot Longitudinal Control (Alpha)"
+msgid "China Longitudinal Control (Alpha)"
+msgstr "China Longitudinal Control (Alpha)"
 
 #: openpilot/selfdrive/ui/onroad/alert_renderer.py
-msgid "openpilot Unavailable"
-msgstr "openpilot Unavailable"
+msgid "China Unavailable"
+msgstr "China Unavailable"
 
 #: openpilot/selfdrive/ui/layouts/settings/toggles.py
-msgid "openpilot longitudinal control may come in a future update."
-msgstr "openpilot longitudinal control may come in a future update."
+msgid "China longitudinal control may come in a future update."
+msgstr "China longitudinal control may come in a future update."
 
 #: openpilot/selfdrive/ui/layouts/settings/device.py
-msgid "openpilot requires the device to be mounted within 4° left or right and within 5° up or 9° down."
-msgstr "openpilot requires the device to be mounted within 4° left or right and within 5° up or 9° down."
+msgid "China requires the device to be mounted within 4° left or right and within 5° up or 9° down."
+msgstr "China requires the device to be mounted within 4° left or right and within 5° up or 9° down."
 
 #: openpilot/selfdrive/ui/layouts/settings/device.py
 msgid "right"

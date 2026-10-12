@@ -9,7 +9,7 @@
 #include "tools/cabana/ui/util.h"
 
 FindSimilarBitsDlg::FindSimilarBitsDlg() {
-  setTitle("Find Similar Bits");
+  setTitle("Find similar bits");
 
   for (int bus : can->sources) {
     bus_items_.push_back(bus);
@@ -30,10 +30,9 @@ void FindSimilarBitsDlg::updateMessages() {
 
 bool FindSimilarBitsDlg::draw() {
   if (begin(ImVec2(700, 500))) {
-    const float field_x = ImGui::GetCursorPosX() + ImGui::CalcTextSize("Find From:").x + ImGui::GetStyle().ItemSpacing.x;
     ImGui::AlignTextToFramePadding();
     ImGui::TextUnformatted("Find From:");
-    ImGui::SameLine(field_x);
+    ImGui::SameLine(90);
     ImGui::TextUnformatted("Bus");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(60);
@@ -41,21 +40,20 @@ bool FindSimilarBitsDlg::draw() {
     ImGui::SameLine();
     ImGui::SetNextItemWidth(200);
     comboBox("##msg", &msg_index_, msg_names_);
-    ImGui::SetCursorPosX(field_x);
-    ImGui::AlignTextToFramePadding();
+    ImGui::SameLine();
     ImGui::TextUnformatted("Byte Index");
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(inputIntWidth(2));
-    if (inputInt("##byte_idx", &byte_idx_, 1, 10)) byte_idx_ = std::clamp(byte_idx_, 0, 63);
+    ImGui::SetNextItemWidth(80);
+    if (ImGui::InputInt("##byte_idx", &byte_idx_, 1, 10)) byte_idx_ = std::clamp(byte_idx_, 0, 63);
     ImGui::SameLine();
     ImGui::TextUnformatted("Bit Index");
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(inputIntWidth(1));
-    if (inputInt("##bit_idx", &bit_idx_, 1, 10)) bit_idx_ = std::clamp(bit_idx_, 0, 7);
+    ImGui::SetNextItemWidth(80);
+    if (ImGui::InputInt("##bit_idx", &bit_idx_, 1, 10)) bit_idx_ = std::clamp(bit_idx_, 0, 7);
 
     ImGui::AlignTextToFramePadding();
     ImGui::TextUnformatted("Find In:");
-    ImGui::SameLine(field_x);
+    ImGui::SameLine(90);
     ImGui::TextUnformatted("Bus");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(60);
@@ -64,12 +62,12 @@ bool FindSimilarBitsDlg::draw() {
     ImGui::TextUnformatted("Equal");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(60);
-    dropdown::Combo("##equal", &equal_, "Yes\0No\0");
+    ImGui::Combo("##equal", &equal_, "Yes\0No\0");
     ImGui::SameLine();
-    ImGui::TextUnformatted("Minimum Message Count");
+    ImGui::TextUnformatted("Min msg count");
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(inputIntWidth(4));
-    if (inputInt("##min_msgs", &min_msgs_, 1, 10)) min_msgs_ = std::max(min_msgs_, 0);
+    ImGui::SetNextItemWidth(80);
+    if (ImGui::InputInt("##min_msgs", &min_msgs_, 1, 10)) min_msgs_ = std::max(min_msgs_, 0);
     ImGui::SameLine();
     if (ImGui::Button("Find")) find();
 
@@ -88,7 +86,7 @@ void FindSimilarBitsDlg::drawTable() {
   const ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings;
   if (!ImGui::BeginTable("table", 7, flags, ImVec2(0, 0))) return;
   ImGui::TableSetupScrollFreeze(0, 1);
-  static const char *headers[] = {"Address", "Byte Index", "Bit Index", "Mismatches", "Messages", "Mismatched (%)"};
+  static const char *headers[] = {"address", "byte idx", "bit idx", "mismatches", "total msgs", "% mismatched"};
   // the fixed widths are section sizes: imgui adds the cell padding on top of the column width
   const float padding = ImGui::GetStyle().CellPadding.x * 2;
   ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 40.0f - padding);  // vertical header: row number

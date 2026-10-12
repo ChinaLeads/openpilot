@@ -15,7 +15,6 @@ struct MainWindowState {
   float video_splitter_ratio = -1.0f;  // < 0: video at its size hint
   bool messages_visible = true;
   bool video_visible = true;
-  bool charts_visible = true;
 };
 
 extern MainWindowState main_window;
