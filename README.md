@@ -32,10 +32,10 @@
 在 comma 设备的 **Settings → Software → Custom Software** 中输入：
 
 ```
-installer.comma.ai/ChinaLeads/openpilot
+installer.comma.ai/ChinaLeads/openpilot/China
 ```
 
-- 无需添加分支后缀，默认即为 Z6 iDD 适配版
+- 必须包含分支后缀 `/China`，完整地址为 `installer.comma.ai/ChinaLeads/openpilot/China`
 - 无需手动选择车型，开机自动锁定 `CHANGAN_Z6_IDD`
 - 首次安装约需下载 1.8GB 源码，请保持网络稳定
 
@@ -65,13 +65,13 @@ installer.comma.ai/ChinaLeads/openpilot
 ## ❓ 常见问题
 
 **Q：安装地址输入后没反应？**
-确认拼写区分大小写：`ChinaLeads/openpilot`；确认设备已联网。
+确认拼写区分大小写，且包含分支后缀：`installer.comma.ai/ChinaLeads/openpilot/China`；确认设备已联网。
 
 **Q：怎么确认装的是 China 版？**
 `设置 → 设备 → 关于`，版本信息显示 **China**；车型指纹应为 `CHANGAN_Z6_IDD`。
 
 **Q：官方 openpilot 更新后会失效吗？**
-不会。同步工作流在每次合并后校验车型适配（指纹、安全模型、平台注册等） ，自动合并校验人推送中止直接发布。
+不会。同步工作流在每次合并后校验车型适配（指纹、安全模型、平台注册等），校验失败则中止推送，不会把未经验证的版本发布给用户设备。
 **Q：首次上路注意什么？**
 横纵向参数为保守出厂值，请在空旷路段低速验证转向与加减速响应，  异常时立即接管。
 
