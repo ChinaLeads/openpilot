@@ -80,7 +80,7 @@ installer.comma.ai/ChinaLeads/openpilot/China
 | 路径 | 内容 |
 |---|---|
 | `openpilot/` | 主系统（selfdrive / system / tools） |
-| `opendbc_repo` | 车型适配子模块 → [ChinaLeads/opendbc](https://github.com/ChinaLeads/opendbc)（`opendbc/car/changan/` + `opendbc/safety/modes/changan.h`） |
+| `opendbc_repo` | 车型适配子模块 → [ChinaLeads/opendbc](https://github.com/ChinaLeads/opendbc)（`opendbc/car/changan/` + `opendbc/safety/safety/safety_changan.h`） |
 | `panda` | CAN 通信固件（上游 commaai/panda，编译时自动引入 changan 安全模型） |
 
 ## 📜 许可

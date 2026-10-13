@@ -168,7 +168,7 @@ jobs:
                    openpilot/selfdrive/ui/China_theme.py \
                    opendbc_repo/opendbc/car/changan/values.py \
                    opendbc_repo/opendbc/car/changan/fingerprints.py \
-                   opendbc_repo/opendbc/safety/modes/changan.h; do
+                   opendbc_repo/opendbc/safety/safety/safety_changan.h; do
             if [ -f "$f" ]; then
               echo "✓ $f"
             else
